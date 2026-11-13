@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>《集成工艺化学》交互式教学仿真实验平台 | JC00158</title>
+  <meta name="description" content="深圳技术大学《集成工艺化学》(JC00158) 交互式教学仿真实验平台，覆盖全书6章理论教学与5大课内必做实验项目。" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='29' fill='%230b192c' stroke='%2338bdf8' stroke-width='4'/><circle cx='32' cy='32' r='10' fill='%2338bdf8' opacity='0.35'/><path d='M16 32h32M32 16v32M21 21l22 22M43 21L21 43' stroke='%2338bdf8' stroke-width='2.2'/></svg>" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <!-- 顶部品牌与全局工具栏 -->
+  <header class="top-header">
+    <div class="brand-area">
+      <div class="wafer-logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="40" height="40">
+          <defs>
+            <linearGradient id="waferGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="50%" stop-color="#818cf8" />
+              <stop offset="100%" stop-color="#2dd4bf" />
+            </linearGradient>
+          </defs>
+          <circle cx="24" cy="24" r="21" fill="none" stroke="url(#waferGrad)" stroke-width="2.5" />
+          <path d="M10 18h28M8 24h32M10 30h28M18 10v28M24 8v32M30 10v28" stroke="url(#waferGrad)" stroke-width="1" opacity="0.55" />
+          <circle cx="24" cy="24" r="6" fill="url(#waferGrad)" opacity="0.85" />
+          <!-- Wafer notch -->
+          <path d="M22 45 L24 42 L26 45" fill="var(--bg-surface)" stroke="url(#waferGrad)" stroke-width="1.8" />
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <div class="course-badge-row">
+          <span class="badge-code">JC00158</span>
+          <span class="badge-dept">深圳技术大学 · 集成电路与光电芯片学院</span>
+          <span class="badge-credit">3学分 · 54学时 (讲授36 + 实验18)</span>
+        </div>
+        <h1>《集成工艺化学》交互式教学仿真实验平台</h1>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="progress-pill" title="已完成交互探究/随堂测验的模块进度">
+        <span class="progress-label">学习进度</span>
+        <div class="progress-bar-mini">
+          <div id="globalProgressFill" class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+        <span id="globalProgressText" class="progress-num">0 / 26</span>
+      </div>
+      <button id="btnSyllabusModal" class="btn btn-outline" type="button">
+        <span>📋 教学大纲与考核</span>
+      </button>
+      <button id="btnReportModal" class="btn btn-outline" type="button">
+        <span>📄 实验成绩单</span>
+      </button>
+      <button id="btnThemeToggle" class="btn btn-icon" type="button" title="切换深色超净间/浅色课堂投影主题">
+        <span id="themeIcon">☀️</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 章节下拉菜单式导航栏 (支持点击/悬停按章节展开下拉菜单 + 级联下拉选择框同步) -->
+  <nav class="chapter-nav-wrapper" aria-label="章节与仿真案例下拉导航">
+    <!-- 方式一：按章节分组的顶部下拉菜单栏 -->
+    <div id="chapterDropdownBar" class="chapter-dropdown-bar">
+      <!-- 由 JS 根据教学大纲动态渲染 7 大章节下拉菜单 -->
+    </div>
+
+    <!-- 方式二：级联下拉选择框（方便课堂快速切换与移动端/投影仪精准定位） -->
+    <div class="cascade-selector-bar">
+      <div class="selector-group">
+        <label for="chapterSelect">📚 章节选择：</label>
+        <div class="select-wrap">
+          <select id="chapterSelect" aria-label="选择课程章节"></select>
+        </div>
+      </div>
+      <div class="selector-arrow" aria-hidden="true">▸</div>
+      <div class="selector-group selector-case">
+        <label for="caseSelect">🔬 仿真案例：</label>
+        <div class="select-wrap">
+          <select id="caseSelect" aria-label="选择当前章节下的交互仿真案例"></select>
+        </div>
+      </div>
+      <div class="selector-quick-nav">
+        <button id="btnPrevCase" class="btn btn-sm" type="button" title="上一个仿真案例">◀ 上一节</button>
+        <button id="btnNextCase" class="btn btn-sm" type="button" title="下一个仿真案例">下一节 ▶</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主工作区 -->
+  <main class="workspace-container">
+    <!-- 当前案例顶部信息横幅 -->
+    <section class="case-hero-banner">
+      <div class="case-hero-left">
+        <div class="case-breadcrumb">
+          <span id="currentChapterTag" class="chapter-tag">第一章</span>
+          <span class="crumb-sep">/</span>
+          <span id="currentSyllabusRef" class="syllabus-ref">大纲对应条目</span>
+          <span id="currentLevelBadges" class="level-badges"></span>
+        </div>
+        <h2 id="currentCaseTitle" class="case-title">加载中...</h2>
+        <p id="currentCaseSubtitle" class="case-subtitle"></p>
+      </div>
+      <div class="case-hero-right">
+        <button id="btnResetSim" class="btn btn-secondary" type="button">↺ 重置仿真参数</button>
+        <button id="btnMarkComplete" class="btn btn-primary" type="button">✓ 标记本节已掌握</button>
+      </div>
+    </section>
+
+    <!-- 双栏主体：左侧交互仿真实验台，右侧理论原理/IC工艺关联/随堂检测 -->
+    <div class="workspace-grid">
+      <!-- 左侧：动态仿真画布与参数控制台 -->
+      <section class="sim-stage-card" aria-label="交互式仿真实验区">
+        <div class="sim-canvas-header">
+          <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span id="simStatusTitle">实时交互仿真引擎运行中</span>
+          </div>
+          <div id="simHeaderMetrics" class="sim-header-metrics"></div>
+        </div>
+
+        <!-- 仿真主视口（Canvas / 交互式实验台容器） -->
+        <div id="simViewport" class="sim-viewport">
+          <!-- 动态注入 Canvas 或虚拟实验台 DOM -->
+        </div>
+
+        <!-- 实时数值仪表盘 -->
+        <div id="simReadoutGrid" class="sim-readout-grid"></div>
+
+        <!-- 交互参数控制面板 -->
+        <div class="sim-controls-panel">
+          <div class="panel-heading">🎛️ 实验参数调节与交互操作台</div>
+          <div id="simControlsContainer" class="sim-controls-container"></div>
+        </div>
+      </section>
+
+      <!-- 右侧：教学大纲目标、化学机理、芯片制造关联与随堂测验 -->
+      <aside class="pedagogy-sidebar">
+        <div class="sidebar-tabs" role="tablist">
+          <button class="sidebar-tab active" data-tab="tab-theory" role="tab" aria-selected="true">📖 知识与机理</button>
+          <button class="sidebar-tab" data-tab="tab-ic" role="tab" aria-selected="false">💎 芯片工艺关联</button>
+          <button class="sidebar-tab" data-tab="tab-quiz" role="tab" aria-selected="false">✍️ 随堂检测</button>
+        </div>
+
+        <!-- Tab 1: 教学目标与核心公式机理 -->
+        <div id="tab-theory" class="sidebar-tab-content active" role="tabpanel">
+          <div class="info-block">
+            <h3>🎯 大纲学习目标 (Objectives)</h3>
+            <div id="syllabusObjectivesBox" class="objectives-list"></div>
+          </div>
+          <div class="info-block">
+            <h3>⚗️ 核心化学原理与定量模型</h3>
+            <div id="coreFormulaBox" class="formula-box"></div>
+            <div id="theoryPointsBox" class="theory-points"></div>
+          </div>
+        </div>
+
+        <!-- Tab 2: 集成电路与光电芯片应用关联 -->
+        <div id="tab-ic" class="sidebar-tab-content" role="tabpanel">
+          <div class="info-block">
+            <h3>🔬 微纳制造与芯片工艺映射</h3>
+            <div id="icApplicationBox" class="ic-application-box"></div>
+          </div>
+          <div class="info-block">
+            <h3>💡 实验操作观察指南</h3>
+            <div id="experimentGuideBox" class="guide-steps-box"></div>
+          </div>
+        </div>
+
+        <!-- Tab 3: 随堂检测与实验评分 -->
+        <div id="tab-quiz" class="sidebar-tab-content" role="tabpanel">
+          <div class="info-block">
+            <h3>📝 随堂检测与思考题</h3>
+            <p class="quiz-hint">结合左侧交互仿真现象作答，检验本节核心知识点掌握情况：</p>
+            <div id="quizContainer" class="quiz-container"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- 教学大纲全景与考核标准弹窗 -->
+  <div id="syllabusModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="syllabusModalTitle">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h2 id="syllabusModalTitle">📋 《集成工艺化学》(JC00158) 课程教学大纲全景映射</h2>
+        <button class="modal-close" data-close="syllabusModal" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-body" id="syllabusModalBody"></div>
+    </div>
+  </div>
+
+  <!-- 实验成绩单与学习报告弹窗 -->
+  <div id="reportModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <h2 id="reportModalTitle">📄 《集成工艺化学》交互仿真学习与实验考核报告</h2>
+        <button class="modal-close" data-close="reportModal" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-body" id="reportModalBody"></div>
+      <div class="modal-footer">
+        <button id="btnPrintReport" class="btn btn-primary" type="button">🖨️ 打印 / 导出 PDF 报告</button>
+        <button id="btnClearProgress" class="btn btn-outline-danger" type="button">清空本地记录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="site-footer">
+    <div>
+      <strong>《集成工艺化学》交互式教学仿真实验平台</strong> · 课程编号 JC00158 · 面向微电子科学与工程及光电芯片相关专业
+    </div>
+    <div class="footer-sub">
+      依据深圳技术大学集成电路与光电芯片学院《集成工艺化学》课程教学大纲建设 · 支持离线运行与 GitHub Pages 部署
+    </div>
+  </footer>
+
+  <!-- 模块化脚本（采用经典脚本顺序加载，同时兼容本地双击 file:// 打开与 GitHub Pages HTTPS 部署） -->
+  <script src="./js/syllabus-data.js"></script>
+  <script src="./js/sim-ch1-ch2.js"></script>
+  <script src="./js/sim-ch3-ch4.js"></script>
+  <script src="./js/sim-ch5-ch6.js"></script>
+  <script src="./js/sim-labs.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
